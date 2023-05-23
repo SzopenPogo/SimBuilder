@@ -6,14 +6,16 @@ public class Selector : MonoBehaviour
 {
     public static Selector Instance { get; private set; }
 
+    //Data
     [field: SerializeField] public LayerMask SelectableLayerMask { get; private set; }
 
     public GameObject SelectedGameObject { get; private set; }
+    public Selectable SelectedScript{ get; private set; }
 
-    private void Awake()
-    {
-        Instance = this;
-    }
+
+    public bool IsActive { get; private set; } = true;
+
+    private void Awake() => Instance = this;
 
     private void Start()
     {
@@ -24,6 +26,8 @@ public class Selector : MonoBehaviour
     {
         InputReader.Instance.LeftClickEvent -= Select;
     }
+
+    public void SetSelector(bool isActive) => IsActive = isActive;
 
     private bool IsSelectableLayerMask(GameObject gameObject)
     {
@@ -61,6 +65,9 @@ public class Selector : MonoBehaviour
 
     private void Select()
     {
+        if (!IsActive)
+            return;
+
         if (!TryGetHittedSelectableGameObject(out GameObject hittedObject))
         {
             ResetSelectedGameObject();
@@ -69,6 +76,10 @@ public class Selector : MonoBehaviour
 
         if (hittedObject == SelectedGameObject)
             return;
+
+        if (SelectedScript != null)
+            SelectedScript.Unselect();
+
 
         //Check if hitted object parent have Selectable script
         if (!TryGetGameObjectSelectable(hittedObject, out Selectable selectableScript))
@@ -80,5 +91,6 @@ public class Selector : MonoBehaviour
         //Select hitted object
         selectableScript.Select();
         SelectedGameObject = hittedObject;
+        SelectedScript = selectableScript;
     }
 }
